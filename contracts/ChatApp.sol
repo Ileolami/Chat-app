@@ -3,12 +3,12 @@ pragma solidity >=0.8.0 <0.9.0;
 
 contract ChatApp {
     //USER STRUCT
-    struct User {
+    struct user {
         string name;
-        Friend[] friendList;
+        friend[] friendList;
     }
 
-    struct Friend {
+    struct friend {
         address pubkey;
         string name;
     }
@@ -19,8 +19,16 @@ contract ChatApp {
         string message;
     }
 
+     struct allUsers{
+        string name;
+        address accountAddress;
+        uint256 phoneNumber;
+     }
+
+     allUsers[] getsAllusers;
+
     //USER MAPPING
-    mapping(address => User) userList;
+    mapping(address => user) userList;
     mapping(bytes32 => message[]) allMessages;
 
     //CHECK USER EXIST
@@ -29,15 +37,17 @@ contract ChatApp {
     }
 
     //CREATE ACCOUNT
-    function createAccount(string calldata name) external {
+    function createAccount(string calldata name, uint256 phoneNumber) external {
         require(checkUserExist(msg.sender) == false, "User already exist");
         require(bytes(name).length > 0, "Name is required");
 
         userList[msg.sender].name = name;
+
+        getsAllusers.push(allUsers(name, msg.sender, phoneNumber));
     }
 
     //GET USERNAME
-    function getUsername(address pubkey) public view returns (string memory) {
+    function getUsername(address pubkey) external view returns (string memory) {
         require(checkUserExist(pubkey), "User does not exist");
         return userList[pubkey].name;
     }
@@ -83,7 +93,7 @@ contract ChatApp {
         address friend_key,
         string memory name
     ) internal {
-        friend memory newFriend = Friend(friend_key, name);
+        friend memory newFriend = friend(friend_key, name);
         userList[me].friendList.push(newFriend);
     }
 
@@ -99,7 +109,7 @@ contract ChatApp {
     ) internal pure returns (bytes32) {
         if (pubkey1 > pubkey2) {
             return keccak256(abi.encodePacked(pubkey1, pubkey2));
-        } else return keccak256((abi.encodePacked(pubkey2, pubkey1)));
+        } else return keccak256(abi.encodePacked(pubkey2, pubkey1));
     }
 
     //SEND MESSAGE
@@ -122,5 +132,9 @@ contract ChatApp {
     ) external view returns (message[] memory) {
         bytes32 chatCode = _getChatCode(msg.sender, friend_key);
         return allMessages[chatCode];
+    }
+
+    function getAllAppUsers() public view returns(allUsers[] memory){
+        return getsAllusers;
     }
 }
